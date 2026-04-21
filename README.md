@@ -159,6 +159,11 @@ All insights are **100% computed from your actual data** — no hardcoded text:
 
 ---
 
+### 📬 Contact
+👤 **Pruthviraj V Mariguddi**  
+📧 *pruthvirajmariguddi@gmail.com*  
+🔗 **LinkedIn:** https://www.linkedin.com/in/pruthviraj-v-mariguddi-5b647228a/
+
 ## ⚡ Quick Start
 
 ### Option 1 — Just Open It (Simplest)
@@ -173,3 +178,5 @@ cd DataVision
 open Dashboard3.html        # macOS
 start Dashboard3.html       # Windows
 xdg-open Dashboard3.html    # Linux
+
+
