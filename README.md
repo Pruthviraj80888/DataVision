@@ -22,7 +22,7 @@
 
 <br/>
 
-[🚀 Live Demo]([#live-demo](https://pruthviraj80888.github.io/DataVision/)) • [✨ Features](#features) • [📸 Screenshots](#screenshots) • [🛠️ Tech Stack](#tech-stack) • [⚡ Quick Start](#quick-start) • [📁 Supported Formats](#supported-formats)
+[🚀 Live Demo]([https://pruthviraj80888.github.io/DataVision/) • [✨ Features](#features) • [📸 Screenshots](#screenshots) • [🛠️ Tech Stack](#tech-stack) • [⚡ Quick Start](#quick-start) • [📁 Supported Formats](#supported-formats)
 
 </div>
 
