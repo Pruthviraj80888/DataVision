@@ -14,14 +14,30 @@
 [![Single File](https://img.shields.io/badge/Single%20File-Yes-blueviolet?style=flat-square)]()
 [![No Backend](https://img.shields.io/badge/Backend-None%20Required-10b981?style=flat-square)]()
 [![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen?style=flat-square)](CONTRIBUTING.md)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20Now-6366f1?style=flat-square&logo=github)](https://pruthviraj80888.github.io/DataVision/)
 
 <br/>
 
-> **Upload any data file → Get instant KPIs, charts, insights & deep analysis.**  
+> **Upload any data file → Get instant KPIs, charts, insights & deep analysis.**
 > Everything runs 100% in your browser. No server. No database. No setup.
 
 <br/>
- • [✨ Features](#features) • [📸 Screenshots](#screenshots) • [🛠️ Tech Stack](#tech-stack) • [⚡ Quick Start](#quick-start) • [📁 Supported Formats](#supported-formats)
+
+[🚀 Live Demo](https://pruthviraj80888.github.io/DataVision/) • [✨ Features](#-features) • [📸 Screenshots](#-screenshots) • [🛠️ Tech Stack](#️-tech-stack) • [⚡ Quick Start](#-quick-start) • [📁 Supported Formats](#-supported-data-formats)
+
+</div>
+
+---
+
+## 🌐 Live Demo
+
+<div align="center">
+
+### 👉 [https://pruthviraj80888.github.io/DataVision/](https://pruthviraj80888.github.io/DataVision/)
+
+*Click the link above to try DataVision Pro live — no installation needed!*
+
+[![Visit Live Site](https://img.shields.io/badge/🚀%20Visit%20Live%20Site-DataVision%20Pro-6366f1?style=for-the-badge)](https://pruthviraj80888.github.io/DataVision/)
 
 </div>
 
@@ -29,11 +45,11 @@
 
 ## 🎯 What Is DataVision Pro?
 
-**DataVision Pro** is a fully reactive, single-file (`Dashboard3.html`) 
-interactive analytics dashboard built with pure HTML, CSS, and JavaScript. 
-Drop in any spreadsheet or data file and the dashboard **instantly** 
-auto-detects your columns, computes real KPIs, builds 5 advanced 
-visualizations, generates 7 AI-powered insights, and performs deep 
+**DataVision Pro** is a fully reactive, single-file (`Dashboard3.html`)
+interactive analytics dashboard built with pure HTML, CSS, and JavaScript.
+Drop in any spreadsheet or data file and the dashboard **instantly**
+auto-detects your columns, computes real KPIs, builds 5 advanced
+visualizations, generates 7 AI-powered insights, and performs deep
 statistical analysis — all without ever sending your data to a server.
 
 **Perfect for:**
@@ -63,6 +79,7 @@ statistical analysis — all without ever sending your data to a server.
 - ✅ Displays total, average, min, max per metric
 
 ### 📊 5 Advanced Visualizations
+
 | # | Chart | Description |
 |---|-------|-------------|
 | 1 | **Trend Line** | Primary metric over time/index (toggle Line ↔ Bar) |
@@ -72,6 +89,7 @@ statistical analysis — all without ever sending your data to a server.
 | 5 | **Multi-Metric Timeline** | All numeric columns on one timeline with toggle |
 
 ### 🧠 7 AI-Powered Insights
+
 All insights are **100% computed from your actual data** — no hardcoded text:
 
 | Insight | Method |
@@ -105,12 +123,53 @@ All insights are **100% computed from your actual data** — no hardcoded text:
 - **Dark Theme** — Easy on the eyes for long analysis sessions
 - **Toast Notifications** — Real-time feedback for all actions
 - **Loading States** — Progress bars and skeleton screens
-- **Site link** - https://pruthviraj80888.github.io/DataVision/
-
 
 ---
 
-### 📬 Contact
-👤 **Pruthviraj V Mariguddi**  
-📧 *pruthvirajmariguddi@gmail.com*  
-🔗 **LinkedIn:** https://www.linkedin.com/in/pruthviraj-v-mariguddi-5b647228a/
+## 📸 Screenshots
+
+<div align="center">
+
+### 🖥️ Screenshot 1 — Dashboard Overview & Upload Center
+
+![DataVision Pro - Dashboard Overview and Upload Center](1img.jpeg)
+
+> *Clean glassmorphic upload zone with drag & drop support,*
+> *format badges, and animated progress tracking*
+
+---
+
+### 📊 Screenshot 2 — KPI Cards & Advanced Visualizations
+
+![DataVision Pro - KPI Cards and Advanced Charts](2img.jpeg)
+
+> *Auto-generated KPI cards from your data columns with sparklines,*
+> *trend badges, and 5 fully interactive chart types*
+
+---
+
+### 🧠 Screenshot 3 — AI Insights & Deep Analysis
+
+![DataVision Pro - AI Insights and Deep Analysis](3img.jpeg)
+
+> *7 data-driven insight cards, correlation heatmap,*
+> *statistical distribution charts, and full data table explorer*
+
+</div>
+
+---
+
+## ⚡ Quick Start
+
+### Option 1 — Just Open It (Simplest)
+```bash
+# 1. Clone the repository
+git clone https://github.com/pruthviraj80888/DataVision.git
+
+# 2. Navigate into the folder
+cd DataVision
+
+# 3. Open the file in your browser
+open Dashboard3.html        # macOS
+start Dashboard3.html       # Windows
+xdg-open Dashboard3.html    # Linux
