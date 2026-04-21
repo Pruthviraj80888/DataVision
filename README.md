@@ -21,8 +21,7 @@
 > Everything runs 100% in your browser. No server. No database. No setup.
 
 <br/>
-
-[🚀 Live Demo]([https://pruthviraj80888.github.io/DataVision/) • [✨ Features](#features) • [📸 Screenshots](#screenshots) • [🛠️ Tech Stack](#tech-stack) • [⚡ Quick Start](#quick-start) • [📁 Supported Formats](#supported-formats)
+ • [✨ Features](#features) • [📸 Screenshots](#screenshots) • [🛠️ Tech Stack](#tech-stack) • [⚡ Quick Start](#quick-start) • [📁 Supported Formats](#supported-formats)
 
 </div>
 
