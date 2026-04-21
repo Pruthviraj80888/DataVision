@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataVision Pro — Reactive Analytics</title>
+
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* ═══════════════════════════════════
+           CSS VARIABLES
+        ═══════════════════════════════════ */
+        :root {
+            --primary: #6366f1;
+            --primary-h: #818cf8;
+            --primary-d: #4f46e5;
+            --accent: #06b6d4;
+            --accent-h: #22d3ee;
+            --green: #10b981;
+            --yellow: #f59e0b;
+            --red: #ef4444;
+            --blue: #3b82f6;
+            --purple: #a855f7;
+            --pink: #ec4899;
+            --orange: #f97316;
+
+            --g-bg: rgba(255,255,255,0.06);
+            --g-bg2: rgba(255,255,255,0.09);
+            --g-border: rgba(255,255,255,0.12);
+            --g-shadow: 0 8px 32px rgba(0,0,0,0.32);
+            --g-blur: blur(22px);
+
+            --t1: #f1f5f9;
+            --t2: #94a3b8;
+            --t3: #64748b;
+
+            --r-sm: 8px;
+            --r-md: 14px;
+            --r-lg: 20px;
+            --r-xl: 28px;
+
+            --sb-w: 250px;
+            --tb-h: 60px;
+        }
+
+        /* ═══════════════════════════════════
+           RESET
+        ═══════════════════════════════════ */
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+        html{font-size:16px;scroll-behavior:smooth;}
+        body{font-family:'Inter',sans-serif;background:linear-gradient(140deg,#0c0a1f 0%,#1a1744 35%,#0e1629 70%,#0c0a1f 100%);color:var(--t1);min-height:100vh;overflow-x:hidden;line-height:1.6;}
+        ::-webkit-scrollbar{width:5px;height:5px;}
+        ::-webkit-scrollbar-track{background:rgba(255,255,255,0.02);}
+        ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
+        ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.2);}
+        button{cursor:pointer;font-family:inherit;}
+        a{text-decoration:none;color:inherit;}
+
+        /* ═══════════════════════════════════
+           BACKGROUND PARTICLES
+        ═══════════════════════════════════ */
+        .bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+        .bg-fx .orb{position:absolute;border-radius:50%;filter:blur(85px);opacity:0.18;}
+        .orb-1{width:650px;height:650px;background:radial-gradient(circle,var(--primary),transparent 70%);top:-200px;left:-150px;animation:drift 28s infinite ease-in-out;}
+        .orb-2{width:500px;height:500px;background:radial-gradient(circle,var(--accent),transparent 70%);bottom:-100px;right:-100px;animation:drift 22s infinite ease-in-out reverse;}
+        .orb-3{width:400px;height:400px;background:radial-gradient(circle,var(--purple),transparent 70%);top:50%;left:40%;animation:drift 25s infinite ease-in-out 3s;}
+        .orb-4{width:350px;height:350px;background:radial-gradient(circle,var(--pink),transparent 70%);top:20%;right:20%;animation:drift 30s infinite ease-in-out 8s;}
+        @keyframes drift{0%,100%{transform:translate(0,0) scale(1);}25%{transform:translate(40px,-60px) scale(1.06);}50%{transform:translate(-30px,50px) scale(0.94);}75%{transform:translate(60px,20px) scale(1.03);}}
+
+        /* ═══════════════════════════════════
+           GLASS CARD
+        ═══════════════════════════════════ */
+        .glass{background:var(--g-bg);backdrop-filter:var(--g-blur);-webkit-backdrop-filter:var(--g-blur);border:1px solid var(--g-border);border-radius:var(--r-md);box-shadow:var(--g-shadow);transition:all 0.3s ease;}
+        .glass:hover{background:var(--g-bg2);border-color:rgba(255,255,255,0.17);transform:translateY(-1px);}
+
+        /* ═══════════════════════════════════
+           LAYOUT
+        ═══════════════════════════════════ */
+        .app{display:flex;min-height:100vh;position:relative;z-index:1;}
+
+        /* ═══════════════════════════════════
+           SIDEBAR
+        ═══════════════════════════════════ */
+        .sb{width:var(--sb-w);height:100vh;position:fixed;left:0;top:0;z-index:100;background:rgba(8,6,24,0.93);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-right:1px solid var(--g-border);display:flex;flex-direction:column;transition:transform 0.3s ease;overflow-y:auto;}
+        .sb-logo{padding:20px;border-bottom:1px solid var(--g-border);display:flex;align-items:center;gap:11px;}
+        .sb-logo-ic{width:38px;height:38px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;color:#fff;box-shadow:0 4px 14px rgba(99,102,241,0.35);}
+        .sb-logo-tx{font-size:1.15rem;font-weight:800;background:linear-gradient(135deg,#fff,var(--accent-h));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+        .sb-logo-sub{font-size:0.6rem;color:var(--t3);text-transform:uppercase;letter-spacing:2px;}
+        .sb-nav{flex:1;padding:14px 8px;}
+        .sb-label{font-size:0.62rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);padding:0 12px;margin:18px 0 6px;font-weight:600;}
+        .sb-link{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--r-sm);color:var(--t2);font-size:0.85rem;font-weight:500;transition:all 0.2s;position:relative;}
+        .sb-link:hover{background:rgba(255,255,255,0.05);color:var(--t1);}
+        .sb-link.on{background:rgba(99,102,241,0.16);color:var(--primary-h);}
+        .sb-link.on::before{content:'';position:absolute;left:0;top:18%;height:64%;width:3px;background:linear-gradient(180deg,var(--primary),var(--accent));border-radius:0 2px 2px 0;}
+        .sb-link i{width:20px;text-align:center;font-size:0.95rem;}
+        .sb-badge{margin-left:auto;background:var(--primary);color:#fff;font-size:0.58rem;padding:2px 7px;border-radius:8px;font-weight:700;}
+        .sb-foot{padding:12px 8px;border-top:1px solid var(--g-border);}
+        .sb-user{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r-sm);background:rgba(255,255,255,0.03);}
+        .sb-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.82rem;}
+        .sb-user-name{font-size:0.8rem;font-weight:600;}
+        .sb-user-role{font-size:0.66rem;color:var(--t3);}
+        .sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:99;}
+        .sb-overlay.show{display:block;}
+
+        /* ═══════════════════════════════════
+           MAIN AREA
+        ═══════════════════════════════════ */
+        .main{flex:1;margin-left:var(--sb-w);min-height:100vh;display:flex;flex-direction:column;}
+        .topbar{height:var(--tb-h);display:flex;align-items:center;justify-content:space-between;padding:0 26px;background:rgba(8,6,24,0.72);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid var(--g-border);position:sticky;top:0;z-index:50;}
+        .topbar-l{display:flex;align-items:center;gap:12px;}
+        .menu-btn{display:none;background:none;border:none;color:var(--t1);font-size:1.15rem;padding:7px;border-radius:7px;transition:background 0.2s;}
+        .menu-btn:hover{background:rgba(255,255,255,0.08);}
+        .page-title{font-size:1.1rem;font-weight:700;}
+        .topbar-r{display:flex;align-items:center;gap:9px;}
+        .top-btn{width:36px;height:36px;border-radius:var(--r-sm);border:1px solid var(--g-border);background:var(--g-bg);color:var(--t2);display:flex;align-items:center;justify-content:center;transition:all 0.2s;font-size:0.85rem;}
+        .top-btn:hover{background:rgba(255,255,255,0.1);color:var(--t1);}
+        .live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px rgba(16,185,129,0.6);animation:blink 2s infinite;}
+        @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.4;}}
+
+        /* ═══════════════════════════════════
+           CONTENT
+        ═══════════════════════════════════ */
+        .content{padding:22px 26px;flex:1;}
+
+        /* ═══════════════════════════════════
+           SECTION HEADERS
+        ═══════════════════════════════════ */
+        .sec{margin-bottom:26px;}
+        .sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+        .sec-tt{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:9px;}
+        .sec-tt i{color:var(--primary-h);font-size:0.9rem;}
+
+        /* ═══════════════════════════════════
+           BUTTONS
+        ═══════════════════════════════════ */
+        .btn-p{display:inline-flex;align-items:center;gap:7px;padding:10px 22px;background:linear-gradient(135deg,var(--primary),var(--primary-d));color:#fff;border:none;border-radius:var(--r-sm);font-size:0.85rem;font-weight:600;transition:all 0.2s;box-shadow:0 4px 14px rgba(99,102,241,0.3);}
+        .btn-p:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(99,102,241,0.45);}
+        .btn-s{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;background:rgba(255,255,255,0.06);color:var(--t2);border:1px solid var(--g-border);border-radius:var(--r-sm);font-size:0.8rem;font-weight:500;transition:all 0.2s;}
+        .btn-s:hover{background:rgba(255,255,255,0.11);color:var(--t1);}
+        .btn-danger{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.25);border-radius:var(--r-sm);font-size:0.8rem;font-weight:600;transition:all 0.2s;}
+        .btn-danger:hover{background:rgba(239,68,68,0.2);}
+
+        /* ═══════════════════════════════════
+           UPLOAD AREA
+        ═══════════════════════════════════ */
+        .upload-card{padding:26px;}
+        .drop{border:2px dashed rgba(99,102,241,0.32);border-radius:var(--r-xl);padding:44px 20px;text-align:center;cursor:pointer;transition:all 0.3s;position:relative;}
+        .drop:hover,.drop.over{border-color:var(--primary);background:rgba(99,102,241,0.05);}
+        .drop.over{border-color:var(--accent);background:rgba(6,182,212,0.06);}
+        .drop-ic{width:68px;height:68px;margin:0 auto 16px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:#fff;box-shadow:0 6px 20px rgba(99,102,241,0.3);animation:glow 3s infinite;}
+        @keyframes glow{0%,100%{box-shadow:0 6px 20px rgba(99,102,241,0.3);}50%{box-shadow:0 6px 35px rgba(99,102,241,0.55);}}
+        .drop-tt{font-size:1.1rem;font-weight:700;margin-bottom:6px;}
+        .drop-sub{color:var(--t2);font-size:0.85rem;margin-bottom:16px;}
+        .pills{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;}
+        .pill{padding:5px 12px;border-radius:14px;font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.3px;}
+        .pill-csv{background:rgba(16,185,129,0.12);color:var(--green);border:1px solid rgba(16,185,129,0.25);}
+        .pill-xlsx{background:rgba(59,130,246,0.12);color:var(--blue);border:1px solid rgba(59,130,246,0.25);}
+        .pill-json{background:rgba(245,158,11,0.12);color:var(--yellow);border:1px solid rgba(245,158,11,0.25);}
+        .pill-tsv{background:rgba(168,85,247,0.12);color:var(--purple);border:1px solid rgba(168,85,247,0.25);}
+
+        /* ═══════════════════════════════════
+           PROGRESS
+        ═══════════════════════════════════ */
+        .prog-box{display:none;margin-top:18px;padding:14px;background:rgba(255,255,255,0.04);border-radius:var(--r-sm);}
+        .prog-box.show{display:block;animation:fadeUp 0.3s ease;}
+        .prog-top{display:flex;justify-content:space-between;margin-bottom:7px;font-size:0.82rem;}
+        .prog-name{font-weight:600;}
+        .prog-pct{color:var(--primary-h);font-weight:600;}
+        .prog-track{height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;}
+        .prog-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:3px;transition:width 0.3s;width:0%;position:relative;}
+        .prog-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent);animation:shimmer 1.4s infinite;}
+        @keyframes shimmer{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+        .prog-status{font-size:0.7rem;color:var(--t3);margin-top:5px;}
+
+        /* ═══════════════════════════════════
+           FILE LIST
+        ═══════════════════════════════════ */
+        .files{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
+        .file-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,0.04);border:1px solid var(--g-border);border-radius:var(--r-sm);transition:all 0.2s;}
+        .file-row:hover{background:rgba(255,255,255,0.07);}
+        .file-ic{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:0.85rem;}
+        .fic-csv{background:rgba(16,185,129,0.12);color:var(--green);}
+        .fic-xlsx{background:rgba(59,130,246,0.12);color:var(--blue);}
+        .fic-json{background:rgba(245,158,11,0.12);color:var(--yellow);}
+        .fic-default{background:rgba(168,85,247,0.12);color:var(--purple);}
+        .file-info{flex:1;min-width:0;}
+        .file-name{font-size:0.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .file-meta{font-size:0.7rem;color:var(--t3);}
+        .file-ok{padding:3px 10px;border-radius:10px;font-size:0.68rem;font-weight:600;background:rgba(16,185,129,0.12);color:var(--green);}
+        .file-del{background:none;border:none;color:var(--t3);padding:6px;border-radius:5px;transition:all 0.2s;font-size:0.82rem;}
+        .file-del:hover{color:var(--red);background:rgba(239,68,68,0.12);}
+
+        /* ═══════════════════════════════════
+           SUMMARY BAR
+        ═══════════════════════════════════ */
+        .sum-bar{display:flex;gap:22px;padding:12px 18px;flex-wrap:wrap;align-items:center;}
+        .sum-item{display:flex;align-items:center;gap:7px;}
+        .sum-dot{width:6px;height:6px;border-radius:50%;}
+        .sum-lbl{font-size:0.77rem;color:var(--t2);}
+        .sum-val{font-weight:700;color:var(--t1);font-size:0.82rem;}
+        .sum-right{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:0.75rem;color:var(--t3);}
+
+        /* ═══════════════════════════════════
+           KPI GRID
+        ═══════════════════════════════════ */
+        .kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;}
+        .kpi{padding:20px;position:relative;overflow:hidden;}
+        .kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:2.5px;border-radius:2px 2px 0 0;}
+        .kpi:nth-child(5n+1)::after{background:linear-gradient(90deg,var(--primary),var(--primary-h));}
+        .kpi:nth-child(5n+2)::after{background:linear-gradient(90deg,var(--green),#34d399);}
+        .kpi:nth-child(5n+3)::after{background:linear-gradient(90deg,var(--accent),var(--accent-h));}
+        .kpi:nth-child(5n+4)::after{background:linear-gradient(90deg,var(--yellow),#fbbf24);}
+        .kpi:nth-child(5n+5)::after{background:linear-gradient(90deg,var(--purple),#c084fc);}
+        .kpi-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+        .kpi-ic{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:0.95rem;}
+        .ki-1{background:rgba(99,102,241,0.14);color:var(--primary-h);}
+        .ki-2{background:rgba(16,185,129,0.14);color:var(--green);}
+        .ki-3{background:rgba(6,182,212,0.14);color:var(--accent);}
+        .ki-4{background:rgba(245,158,11,0.14);color:var(--yellow);}
+        .ki-5{background:rgba(168,85,247,0.14);color:var(--purple);}
+        .kpi-badge{display:inline-flex;align-items:center;gap:3px;padding:3px 7px;border-radius:7px;font-size:0.66rem;font-weight:600;}
+        .b-up{background:rgba(16,185,129,0.12);color:var(--green);}
+        .b-dn{background:rgba(239,68,68,0.12);color:var(--red);}
+        .b-flat{background:rgba(100,116,139,0.12);color:var(--t3);}
+        .kpi-val{font-size:1.75rem;font-weight:800;letter-spacing:-0.8px;line-height:1.2;margin-bottom:3px;}
+        .kpi-name{font-size:0.77rem;color:var(--t2);font-weight:500;}
+        .kpi-sub{font-size:0.69rem;color:var(--t3);margin-top:2px;}
+        .spark{margin-top:9px;height:34px;}
+
+        /* ═══════════════════════════════════
+           CHARTS GRID
+        ═══════════════════════════════════ */
+        .viz-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+        .viz{padding:20px;}
+        .viz.wide{grid-column:1/-1;}
+        .viz-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+        .viz-tt{font-size:0.92rem;font-weight:700;display:flex;align-items:center;gap:7px;}
+        .viz-tt i{color:var(--primary-h);font-size:0.82rem;}
+        .viz-ctrls{display:flex;gap:4px;}
+        .viz-btn{padding:5px 10px;border:1px solid var(--g-border);background:transparent;color:var(--t3);border-radius:5px;font-size:0.71rem;font-family:inherit;transition:all 0.2s;font-weight:500;}
+        .viz-btn:hover,.viz-btn.on{background:rgba(99,102,241,0.14);border-color:var(--primary);color:var(--primary-h);}
+        .chart-box{position:relative;height:255px;}
+        .chart-box.tall{height:305px;}
+
+        /* ═══════════════════════════════════
+           TABS
+        ═══════════════════════════════════ */
+        .tabs{display:flex;gap:3px;padding:3px;background:rgba(255,255,255,0.04);border-radius:var(--r-sm);width:fit-content;margin-bottom:16px;}
+        .tab{padding:8px 16px;border:none;background:transparent;color:var(--t2);border-radius:6px;font-family:inherit;font-size:0.82rem;font-weight:500;transition:all 0.2s;display:flex;align-items:center;gap:6px;}
+        .tab:hover{color:var(--t1);background:rgba(255,255,255,0.05);}
+        .tab.on{background:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(99,102,241,0.3);}
+        .t-pane{display:none;}
+        .t-pane.on{display:block;animation:fadeUp 0.35s ease;}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+
+        /* ═══════════════════════════════════
+           INSIGHTS
+        ═══════════════════════════════════ */
+        .ins-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
+        .ins{padding:18px;}
+        .ins-hd{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;}
+        .ins-ic{width:32px;min-width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.82rem;}
+        .ic-trend{background:rgba(99,102,241,0.14);color:var(--primary-h);}
+        .ic-alert{background:rgba(239,68,68,0.14);color:var(--red);}
+        .ic-corr{background:rgba(16,185,129,0.14);color:var(--green);}
+        .ic-fore{background:rgba(6,182,212,0.14);color:var(--accent);}
+        .ic-cat{background:rgba(245,158,11,0.14);color:var(--yellow);}
+        .ic-info{background:rgba(168,85,247,0.14);color:var(--purple);}
+        .ins-title{font-size:0.86rem;font-weight:700;margin-bottom:1px;}
+        .ins-type{font-size:0.62rem;color:var(--t3);text-transform:uppercase;letter-spacing:1px;}
+        .ins-body{font-size:0.8rem;color:var(--t2);line-height:1.65;}
+        .m{display:inline-flex;align-items:center;padding:1px 6px;background:rgba(99,102,241,0.1);border-radius:4px;color:var(--primary-h);font-weight:600;font-size:0.76rem;}
+
+        /* ═══════════════════════════════════
+           TABLE
+        ═══════════════════════════════════ */
+        .tbl-wrap{overflow-x:auto;border-radius:var(--r-sm);border:1px solid var(--g-border);}
+        .tbl{width:100%;border-collapse:collapse;font-size:0.8rem;}
+        .tbl thead{background:rgba(99,102,241,0.08);}
+        .tbl th{padding:11px 13px;text-align:left;font-weight:600;color:var(--t1);border-bottom:1px solid var(--g-border);white-space:nowrap;cursor:pointer;user-select:none;transition:background 0.2s;}
+        .tbl th:hover{background:rgba(99,102,241,0.13);}
+        .tbl th .sort-ic{font-size:0.6rem;opacity:0.4;margin-left:4px;}
+        .tbl td{padding:9px 13px;border-bottom:1px solid rgba(255,255,255,0.03);color:var(--t2);}
+        .tbl tbody tr:hover{background:rgba(255,255,255,0.04);}
+        .tbl-foot{display:flex;align-items:center;justify-content:space-between;margin-top:12px;font-size:0.78rem;color:var(--t3);}
+        .pg-btns{display:flex;gap:3px;}
+        .pg{padding:5px 10px;border:1px solid var(--g-border);background:transparent;color:var(--t2);border-radius:5px;font-family:inherit;font-size:0.76rem;transition:all 0.2s;}
+        .pg:hover,.pg.on{background:rgba(99,102,241,0.14);border-color:var(--primary);color:var(--primary-h);}
+        .pg:disabled{opacity:0.3;cursor:not-allowed;}
+
+        /* ═══════════════════════════════════
+           STAT BOXES
+        ═══════════════════════════════════ */
+        .stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:9px;margin-bottom:14px;}
+        .stat-box{padding:12px;background:rgba(255,255,255,0.04);border-radius:var(--r-sm);text-align:center;}
+        .stat-v{font-size:1.05rem;font-weight:800;color:var(--primary-h);}
+        .stat-l{font-size:0.66rem;color:var(--t3);margin-top:2px;}
+
+        /* ═══════════════════════════════════
+           CORRELATION
+        ═══════════════════════════════════ */
+        .corr-container{display:grid;gap:3px;}
+        .corr-cell{border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;cursor:default;aspect-ratio:1;transition:transform 0.15s;}
+        .corr-cell:hover{transform:scale(1.1);z-index:2;}
+        .corr-lbl{font-size:0.65rem;color:var(--t3);text-align:center;display:flex;align-items:center;justify-content:center;}
+
+        /* ═══════════════════════════════════
+           EMPTY STATE
+        ═══════════════════════════════════ */
+        .empty{text-align:center;padding:48px 20px;color:var(--t3);}
+        .empty i{font-size:2.5rem;margin-bottom:12px;display:block;opacity:0.45;}
+        .empty h3{font-size:0.95rem;margin-bottom:5px;color:var(--t2);}
+        .empty p{font-size:0.8rem;}
+
+        /* ═══════════════════════════════════
+           TOAST
+        ═══════════════════════════════════ */
+        .toast-wrap{position:fixed;top:16px;right:16px;z-index:99999;display:flex;flex-direction:column;gap:7px;}
+        .tst{display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(16,14,40,0.96);backdrop-filter:blur(20px);border:1px solid var(--g-border);border-radius:var(--r-sm);box-shadow:0 8px 28px rgba(0,0,0,0.4);min-width:280px;max-width:420px;animation:tsIn 0.35s ease;position:relative;overflow:hidden;}
+        .tst::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
+        .tst.ok::before{background:var(--green);}.tst.er::before{background:var(--red);}.tst.inf::before{background:var(--blue);}.tst.wrn::before{background:var(--yellow);}
+        .tst-ic{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;flex-shrink:0;}
+        .tst.ok .tst-ic{background:rgba(16,185,129,0.14);color:var(--green);}
+        .tst.er .tst-ic{background:rgba(239,68,68,0.14);color:var(--red);}
+        .tst.inf .tst-ic{background:rgba(59,130,246,0.14);color:var(--blue);}
+        .tst.wrn .tst-ic{background:rgba(245,158,11,0.14);color:var(--yellow);}
+        .tst-msg{flex:1;font-size:0.8rem;font-weight:500;line-height:1.4;}
+        .tst-x{background:none;border:none;color:var(--t3);cursor:pointer;font-size:0.78rem;padding:3px;}
+        @keyframes tsIn{from{transform:translateX(110%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+
+        /* ═══════════════════════════════════
+           LOADER
+        ═══════════════════════════════════ */
+        .loader-o{position:fixed;inset:0;background:rgba(8,6,24,0.97);z-index:100000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity 0.5s;}
+        .loader-o.hide{opacity:0;pointer-events:none;}
+        .ldr{width:48px;height:48px;border:3px solid rgba(255,255,255,0.07);border-top-color:var(--primary);border-right-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+        @keyframes spin{to{transform:rotate(360deg);}}
+        .ldr-txt{font-size:0.92rem;color:var(--t2);}
+
+        /* ═══════════════════════════════════
+           FILTER BAR
+        ═══════════════════════════════════ */
+        .fbar{display:flex;align-items:center;gap:10px;padding:11px 16px;flex-wrap:wrap;}
+        .fbar-lbl{font-size:0.76rem;color:var(--t3);font-weight:500;}
+        .fbar-sel{padding:6px 12px;border:1px solid var(--g-border);background:rgba(255,255,255,0.05);color:var(--t1);border-radius:var(--r-sm);font-family:inherit;font-size:0.78rem;outline:none;transition:all 0.2s;}
+        .fbar-sel:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(99,102,241,0.13);}
+        .fbar-sel option{background:#1a1744;}
+
+        /* ═══════════════════════════════════
+           RESPONSIVE
+        ═══════════════════════════════════ */
+        @media(max-width:1100px){.viz-grid{grid-template-columns:1fr;}}
+        @media(max-width:900px){
+            .sb{transform:translateX(-100%);}.sb.open{transform:translateX(0);}
+            .main{margin-left:0;}.menu-btn{display:flex;}
+            .kpi-grid{grid-template-columns:repeat(2,1fr);}
+        }
+        @media(max-width:560px){
+            .content{padding:14px;}.kpi-grid{grid-template-columns:1fr 1fr;}.kpi-val{font-size:1.35rem;}
+            .ins-grid{grid-template-columns:1fr;}.pills{gap:4px;}.pill{font-size:0.62rem;padding:4px 8px;}
+        }
+    </style>
+</head>
+<body>
+
+<!-- BACKGROUND -->
+<div class="bg-fx"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div><div class="orb orb-4"></div></div>
+
+<!-- LOADER -->
+<div class="loader-o" id="loader"><div class="ldr"></div><div class="ldr-txt">Initializing DataVision Pro…</div></div>
+
+<!-- TOASTS -->
+<div class="toast-wrap" id="toasts"></div>
+
+<!-- SIDEBAR OVERLAY -->
+<div class="sb-overlay" id="sbOverlay" onclick="closeSB()"></div>
+
+<!-- APP -->
+<div class="app">
+
+    <!-- SIDEBAR -->
+    <aside class="sb" id="sb">
+        <div class="sb-logo">
+            <div class="sb-logo-ic"><i class="fas fa-chart-line"></i></div>
+            <div><div class="sb-logo-tx">DataVision</div><div class="sb-logo-sub">Pro Analytics</div></div>
+        </div>
+        <nav class="sb-nav">
+            <div class="sb-label">Navigation</div>
+            <a class="sb-link on" onclick="scrollSec('secUpload')"><i class="fas fa-upload"></i> Upload Data</a>
+            <a class="sb-link" onclick="scrollSec('secKPI')"><i class="fas fa-tachometer-alt"></i> KPI Dashboard</a>
+            <a class="sb-link" onclick="scrollSec('secViz')"><i class="fas fa-chart-bar"></i> Visualizations</a>
+            <a class="sb-link" onclick="scrollSec('secAnalysis')"><i class="fas fa-microscope"></i> Deep Analysis <span class="sb-badge">AI</span></a>
+            <div class="sb-label">Actions</div>
+            <a class="sb-link" onclick="doExportCSV()"><i class="fas fa-file-csv"></i> Export CSV</a>
+            <a class="sb-link" onclick="doResetAll()"><i class="fas fa-trash-alt"></i> Clear All Data</a>
+            <a class="sb-link" onclick="window.print()"><i class="fas fa-print"></i> Print Report</a>
+        </nav>
+        <div class="sb-foot">
+            <div class="sb-user">
+                <div class="sb-avatar">DV</div>
+                <div><div class="sb-user-name">DataVision Pro</div><div class="sb-user-role">v2.0 — Reactive Engine</div></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+        <div class="topbar">
+            <div class="topbar-l">
+                <button class="menu-btn" onclick="openSB()"><i class="fas fa-bars"></i></button>
+                <div class="page-title">Analytics Dashboard</div>
+            </div>
+            <div class="topbar-r">
+                <div class="live-dot" title="Live" id="liveDot" style="display:none;"></div>
+                <button class="top-btn" onclick="doRefresh()" title="Refresh"><i class="fas fa-sync-alt"></i></button>
+                <button class="top-btn" onclick="doExportCSV()" title="Export"><i class="fas fa-download"></i></button>
+                <button class="top-btn btn-danger" onclick="doResetAll()" title="Clear All" style="width:auto;padding:0 10px;font-size:0.74rem;gap:5px;border:1px solid rgba(239,68,68,0.25);"><i class="fas fa-trash-alt"></i></button>
+            </div>
+        </div>
+
+        <div class="content">
+
+            <!-- ═══════════ UPLOAD ═══════════ -->
+            <div class="sec" id="secUpload">
+                <div class="sec-hd">
+                    <div class="sec-tt"><i class="fas fa-cloud-upload-alt"></i> Data Upload Center</div>
+                    <button class="btn-s" onclick="loadDemo()"><i class="fas fa-flask"></i> Load Demo Data</button>
+                </div>
+                <div class="upload-card glass">
+                    <div class="drop" id="drop" onclick="document.getElementById('fIn').click()">
+                        <div class="drop-ic"><i class="fas fa-cloud-upload-alt"></i></div>
+                        <div class="drop-tt">Drop your data file here</div>
+                        <div class="drop-sub">Drag & drop or click to browse — all processing stays in your browser</div>
+                        <div class="pills">
+                            <span class="pill pill-csv">CSV</span>
+                            <span class="pill pill-xlsx">Excel .xlsx</span>
+                            <span class="pill pill-json">JSON</span>
+                            <span class="pill pill-tsv">TSV</span>
+                        </div>
+                        <button class="btn-p" onclick="event.stopPropagation();document.getElementById('fIn').click()"><i class="fas fa-folder-open"></i> Browse Files</button>
+                        <input type="file" id="fIn" hidden accept=".csv,.xlsx,.xls,.json,.tsv,.txt" multiple>
+                    </div>
+                    <div class="prog-box" id="progBox">
+                        <div class="prog-top"><span class="prog-name" id="progName">file.csv</span><span class="prog-pct" id="progPct">0%</span></div>
+                        <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+                        <div class="prog-status" id="progStatus">Preparing…</div>
+                    </div>
+                    <div class="files" id="fileList"></div>
+                </div>
+            </div>
+
+            <!-- ═══════════ SUMMARY ═══════════ -->
+            <div class="sum-bar glass" id="sumBar" style="display:none;">
+                <div class="sum-item"><div class="sum-dot" style="background:var(--green);box-shadow:0 0 6px rgba(16,185,129,0.6);"></div><span class="sum-lbl">Rows: <span class="sum-val" id="sRows">—</span></span></div>
+                <div class="sum-item"><div class="sum-dot" style="background:var(--blue);box-shadow:0 0 6px rgba(59,130,246,0.6);"></div><span class="sum-lbl">Columns: <span class="sum-val" id="sCols">—</span></span></div>
+                <div class="sum-item"><div class="sum-dot" style="background:var(--purple);box-shadow:0 0 6px rgba(168,85,247,0.6);"></div><span class="sum-lbl">Numeric: <span class="sum-val" id="sNum">—</span></span></div>
+                <div class="sum-item"><div class="sum-dot" style="background:var(--yellow);box-shadow:0 0 6px rgba(245,158,11,0.6);"></div><span class="sum-lbl">Missing: <span class="sum-val" id="sMiss">—</span></span></div>
+                <div class="sum-item"><div class="sum-dot" style="background:var(--accent);box-shadow:0 0 6px rgba(6,182,212,0.6);"></div><span class="sum-lbl">Quality: <span class="sum-val" id="sQual">—</span></span></div>
+                <div class="sum-right" id="sumRefresh"><i class="fas fa-circle" style="color:var(--green);font-size:0.42rem;"></i> Updated just now</div>
+            </div>
+
+            <!-- ═══════════ FILTER ═══════════ -->
+            <div class="fbar glass" id="fBar" style="display:none;margin-bottom:18px;">
+                <span class="fbar-lbl">Filter 1:</span>
+                <select class="fbar-sel" id="filter1" onchange="applyFilters()"><option value="">All</option></select>
+                <span class="fbar-lbl" id="filter2Lbl" style="display:none;">Filter 2:</span>
+                <select class="fbar-sel" id="filter2" style="display:none;" onchange="applyFilters()"><option value="">All</option></select>
+            </div>
+
+            <!-- ═══════════ KPIs ═══════════ -->
+            <div class="sec" id="secKPI">
+                <div class="sec-hd"><div class="sec-tt"><i class="fas fa-tachometer-alt"></i> Key Performance Indicators</div></div>
+                <div class="kpi-grid" id="kpiGrid"><div class="empty glass" style="grid-column:1/-1;"><i class="fas fa-chart-pie"></i><h3>No data loaded</h3><p>Upload a file or load demo data to see KPIs</p></div></div>
+            </div>
+
+            <!-- ═══════════ VISUALIZATIONS ═══════════ -->
+            <div class="sec" id="secViz">
+                <div class="sec-hd"><div class="sec-tt"><i class="fas fa-chart-area"></i> Advanced Visualizations</div></div>
+                <div class="viz-grid" id="vizGrid"><div class="empty glass viz wide"><i class="fas fa-chart-bar"></i><h3>Charts appear here</h3><p>Upload data to auto-generate visualizations</p></div></div>
+            </div>
+
+            <!-- ═══════════ ANALYSIS ═══════════ -->
+            <div class="sec" id="secAnalysis">
+                <div class="sec-hd"><div class="sec-tt"><i class="fas fa-microscope"></i> Deep Analysis</div></div>
+                <div class="tabs">
+                    <button class="tab on" onclick="swTab('insights',this)"><i class="fas fa-lightbulb"></i> Insights</button>
+                    <button class="tab" onclick="swTab('table',this)"><i class="fas fa-table"></i> Data Table</button>
+                    <button class="tab" onclick="swTab('stats',this)"><i class="fas fa-calculator"></i> Statistics</button>
+                    <button class="tab" onclick="swTab('corr',this)"><i class="fas fa-project-diagram"></i> Correlation</button>
+                </div>
+
+                <div class="t-pane on" id="tp-insights">
+                    <div class="ins-grid" id="insGrid"><div class="empty glass" style="grid-column:1/-1;"><i class="fas fa-lightbulb"></i><h3>No insights yet</h3><p>Upload data to generate AI-powered insights</p></div></div>
+                </div>
+                <div class="t-pane" id="tp-table">
+                    <div class="glass" style="padding:18px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                            <div class="sec-tt"><i class="fas fa-table"></i> Data Explorer</div>
+                            <button class="btn-s" onclick="doExportCSV()"><i class="fas fa-download"></i> Export</button>
+                        </div>
+                        <div class="tbl-wrap"><table class="tbl"><thead><tr id="tHead"></tr></thead><tbody id="tBody"></tbody></table></div>
+                        <div class="tbl-foot"><span id="tInfo">No data</span><div class="pg-btns" id="pgBtns"></div></div>
+                    </div>
+                </div>
+                <div class="t-pane" id="tp-stats">
+                    <div class="viz-grid">
+                        <div class="viz glass"><div class="viz-hd"><div class="viz-tt"><i class="fas fa-chart-bar"></i> Distribution</div><select class="fbar-sel" id="distColSel" onchange="updateStats()" style="font-size:0.73rem;padding:4px 8px;"></select></div><div class="stat-grid" id="statBoxes"></div><div class="chart-box"><canvas id="distChart"></canvas></div></div>
+                        <div class="viz glass"><div class="viz-hd"><div class="viz-tt"><i class="fas fa-columns"></i> Column Comparison</div></div><div class="chart-box"><canvas id="compChart"></canvas></div></div>
+                    </div>
+                </div>
+                <div class="t-pane" id="tp-corr">
+                    <div class="viz glass"><div class="viz-hd"><div class="viz-tt"><i class="fas fa-th"></i> Correlation Matrix</div></div><div id="corrBox" style="padding:12px;"></div><div class="chart-box tall" style="margin-top:12px;"><canvas id="scatChart"></canvas></div></div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     JAVASCRIPT ENGINE
+═══════════════════════════════════════════ -->
+<script>
+/* ============================
+   STATE
+============================ */
+const D = {
+    raw: [],
+    filtered: [],
+    cols: [],
+    numCols: [],
+    catCols: [],
+    dateCol: null,
+    charts: {},
+    sparks: {},
+    pg: 1,
+    perPg: 12,
+    sortCol: null,
+    sortDir: 'asc',
+    fileCount: 0,
+    loaded: false
+};
+
+const COLORS = ['rgba(99,102,241,0.8)','rgba(6,182,212,0.8)','rgba(16,185,129,0.8)','rgba(245,158,11,0.8)','rgba(168,85,247,0.8)','rgba(236,72,153,0.8)','rgba(59,130,246,0.8)','rgba(239,68,68,0.8)','rgba(249,115,22,0.8)','rgba(20,184,166,0.8)'];
+const BORDERS = ['#6366f1','#06b6d4','#10b981','#f59e0b','#a855f7','#ec4899','#3b82f6','#ef4444','#f97316','#14b8a6'];
+
+/* ============================
+   INIT
+============================ */
+window.addEventListener('load', () => {
+    setTimeout(() => document.getElementById('loader').classList.add('hide'), 1100);
+    setupUpload();
+});
+
+/* ============================
+   TOAST
+============================ */
+function toast(msg, type = 'inf') {
+    const icons = { ok:'fa-check', er:'fa-times', inf:'fa-info', wrn:'fa-exclamation' };
+    const el = document.createElement('div');
+    el.className = `tst ${type}`;
+    el.innerHTML = `<div class="tst-ic"><i class="fas ${icons[type]||'fa-info'}"></i></div><span class="tst-msg">${msg}</span><button class="tst-x" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
+    document.getElementById('toasts').appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(110%)'; el.style.transition = 'all 0.4s'; setTimeout(() => el.remove(), 400); }, 4500);
+}
+
+/* ============================
+   SIDEBAR
+============================ */
+function openSB() { document.getElementById('sb').classList.add('open'); document.getElementById('sbOverlay').classList.add('show'); }
+function closeSB() { document.getElementById('sb').classList.remove('open'); document.getElementById('sbOverlay').classList.remove('show'); }
+function scrollSec(id) { document.getElementById(id)?.scrollIntoView({ behavior:'smooth', block:'start' }); closeSB(); }
+
+/* ============================
+   TABS
+============================ */
+function swTab(id, btn) {
+    document.querySelectorAll('.t-pane').forEach(p => p.classList.remove('on'));
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
+    document.getElementById('tp-' + id)?.classList.add('on');
+    btn?.classList.add('on');
+    setTimeout(() => { Object.values(D.charts).forEach(c => { try { c.resize(); } catch(e){} }); }, 100);
+}
+
+/* ============================
+   UPLOAD SETUP
+============================ */
+function setupUpload() {
+    const zone = document.getElementById('drop');
+    const inp = document.getElementById('fIn');
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('over'));
+    zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('over'); if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); });
+    inp.addEventListener('change', e => { if (e.target.files.length) handleFiles(e.target.files); e.target.value = ''; });
+}
+
+function handleFiles(files) {
+    Array.from(files).forEach(f => {
+        const ext = f.name.split('.').pop().toLowerCase();
+        if (!['csv','xlsx','xls','json','tsv','txt'].includes(ext)) { toast(`Unsupported: .${ext}`, 'er'); return; }
+        readFile(f, ext);
+    });
+}
+
+/* ============================
+   FILE READING
+============================ */
+function readFile(file, ext) {
+    showProg(file.name);
+    const reader = new FileReader();
+    reader.onprogress = e => { if (e.lengthComputable) setProg(Math.round(e.loaded / e.total * 75), 'Reading file…'); };
+    reader.onload = e => {
+        setProg(85, 'Parsing data…');
+        try {
+            let rows = [];
+            if (ext === 'csv' || ext === 'tsv' || ext === 'txt') {
+                const res = Papa.parse(e.target.result, { header: true, dynamicTyping: true, skipEmptyLines: true, delimiter: ext === 'tsv' ? '\t' : '' });
+                rows = res.data;
+            } else if (ext === 'json') {
+                let p = JSON.parse(e.target.result);
+                rows = Array.isArray(p) ? p : [p];
+            } else if (ext === 'xlsx' || ext === 'xls') {
+                const wb = XLSX.read(e.target.result, { type: 'binary' });
+                rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+            }
+            setProg(95, 'Analysing…');
+            setTimeout(() => {
+                setProg(100, 'Done!');
+                addFileChip(file, rows.length);
+                ingest(rows, file.name);
+                toast(`Loaded <strong>${rows.length}</strong> rows from <strong>${file.name}</strong>`, 'ok');
+                setTimeout(hideProg, 1000);
+            }, 250);
+        } catch (err) { hideProg(); toast('Parse error: ' + err.message, 'er'); }
+    };
+    reader.onerror = () => { hideProg(); toast('Read error', 'er'); };
+    if (ext === 'xlsx' || ext === 'xls') reader.readAsBinaryString(file); else reader.readAsText(file);
+}
+
+function showProg(name) { const b = document.getElementById('progBox'); b.classList.add('show'); document.getElementById('progName').textContent = name; setProg(0, 'Preparing…'); }
+function setProg(pct, status) { document.getElementById('progFill').style.width = pct + '%'; document.getElementById('progPct').textContent = pct + '%'; document.getElementById('progStatus').textContent = status; }
+function hideProg() { document.getElementById('progBox').classList.remove('show'); }
+
+/* ============================
+   FILE CHIPS
+============================ */
+function addFileChip(file, rows) {
+    D.fileCount++;
+    const ext = file.name.split('.').pop().toLowerCase();
+    const id = 'fc_' + Date.now() + '_' + D.fileCount;
+    const icMap = { csv:'fic-csv', xlsx:'fic-xlsx', xls:'fic-xlsx', json:'fic-json' };
+    const el = document.createElement('div');
+    el.className = 'file-row'; el.id = id;
+    el.innerHTML = `<div class="file-ic ${icMap[ext]||'fic-default'}"><i class="fas fa-file-alt"></i></div>
+        <div class="file-info"><div class="file-name" title="${file.name}">${file.name}</div><div class="file-meta">${rows} rows · ${(file.size/1024).toFixed(1)} KB</div></div>
+        <span class="file-ok"><i class="fas fa-check"></i> Loaded</span>
+        <button class="file-del" onclick="removeFile('${id}')" title="Remove"><i class="fas fa-times"></i></button>`;
+    document.getElementById('fileList').appendChild(el);
+}
+
+function removeFile(id) {
+    document.getElementById(id)?.remove();
+    D.fileCount--;
+    if (D.fileCount <= 0) { doResetAll(); }
+    else toast('File removed', 'inf');
+}
+
+/* ============================
+   ★ RESET ALL — COMPLETE WIPE
+============================ */
+function doResetAll() {
+    // Clear data
+    D.raw = []; D.filtered = []; D.cols = []; D.numCols = []; D.catCols = []; D.dateCol = null; D.loaded = false; D.pg = 1; D.sortCol = null; D.fileCount = 0;
+
+    // Destroy ALL charts
+    Object.keys(D.charts).forEach(k => { try { D.charts[k].destroy(); } catch(e){} });
+    D.charts = {};
+    Object.keys(D.sparks).forEach(k => { try { D.sparks[k].destroy(); } catch(e){} });
+    D.sparks = {};
+
+    // Reset UI
+    document.getElementById('fileList').innerHTML = '';
+    document.getElementById('sumBar').style.display = 'none';
+    document.getElementById('fBar').style.display = 'none';
+    document.getElementById('liveDot').style.display = 'none';
+    document.getElementById('kpiGrid').innerHTML = '<div class="empty glass" style="grid-column:1/-1;"><i class="fas fa-chart-pie"></i><h3>No data loaded</h3><p>Upload a file or load demo data to see KPIs</p></div>';
+    document.getElementById('vizGrid').innerHTML = '<div class="empty glass viz wide"><i class="fas fa-chart-bar"></i><h3>Charts appear here</h3><p>Upload data to auto-generate visualizations</p></div>';
+    document.getElementById('insGrid').innerHTML = '<div class="empty glass" style="grid-column:1/-1;"><i class="fas fa-lightbulb"></i><h3>No insights yet</h3><p>Upload data to generate insights</p></div>';
+    document.getElementById('tHead').innerHTML = '';
+    document.getElementById('tBody').innerHTML = '';
+    document.getElementById('tInfo').textContent = 'No data';
+    document.getElementById('pgBtns').innerHTML = '';
+    document.getElementById('statBoxes').innerHTML = '';
+    document.getElementById('distColSel').innerHTML = '';
+    document.getElementById('corrBox').innerHTML = '';
+
+    // Clear canvas elements that might still exist
+    ['distChart','compChart','scatChart'].forEach(id => {
+        const c = document.getElementById(id);
+        if (c) { const ctx = c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height); }
+    });
+
+    toast('All data cleared — dashboard reset', 'wrn');
+}
+
+/* ============================
+   ★ INGEST DATA — FULL ANALYSIS
+============================ */
+function ingest(rows, filename) {
+    if (!rows || !rows.length) { toast('Empty file', 'wrn'); return; }
+
+    // Clean empty rows
+    rows = rows.filter(r => Object.values(r).some(v => v !== null && v !== undefined && v !== ''));
+    if (!rows.length) { toast('No valid data rows found', 'wrn'); return; }
+
+    D.raw = rows;
+    D.cols = Object.keys(rows[0]);
+
+    // Detect numeric columns
+    D.numCols = D.cols.filter(c => {
+        const sample = rows.slice(0, Math.min(50, rows.length)).filter(r => r[c] !== null && r[c] !== undefined && r[c] !== '');
+        return sample.length > 0 && sample.every(r => typeof r[c] === 'number' || (!isNaN(parseFloat(r[c])) && String(r[c]).trim() !== ''));
+    });
+
+    // Detect categorical columns
+    D.catCols = D.cols.filter(c => !D.numCols.includes(c));
+
+    // Detect date column
+    D.dateCol = findDateCol(D.catCols, rows) || findDateCol(D.numCols, rows);
+
+    // Coerce numerics
+    D.raw = rows.map(r => {
+        const o = { ...r };
+        D.numCols.forEach(c => { o[c] = parseFloat(r[c]) || 0; });
+        return o;
+    });
+
+    D.filtered = [...D.raw];
+    D.loaded = true;
+    D.pg = 1;
+
+    // Build everything
+    updateSummary();
+    buildFilters();
+    renderAll();
+
+    document.getElementById('sumBar').style.display = 'flex';
+    document.getElementById('fBar').style.display = 'flex';
+    document.getElementById('liveDot').style.display = 'block';
+    scrollSec('secKPI');
+}
+
+function findDateCol(cols, rows) {
+    const dateWords = /date|time|month|year|day|period|week|timestamp|created|updated|dt$/i;
+    for (const c of cols) {
+        if (dateWords.test(c)) return c;
+        const sample = rows.slice(0, 10).map(r => String(r[c] || ''));
+        if (sample.filter(v => !isNaN(Date.parse(v)) && v.length > 5).length >= 5) return c;
+    }
+    return null;
+}
+
+/* ============================
+   SUMMARY BAR
+============================ */
+function updateSummary() {
+    const totalCells = D.raw.length * D.cols.length;
+    let miss = 0;
+    D.raw.forEach(r => D.cols.forEach(c => { if (r[c] === null || r[c] === undefined || r[c] === '') miss++; }));
+    const qual = Math.round((1 - miss / totalCells) * 100);
+    document.getElementById('sRows').textContent = D.raw.length.toLocaleString();
+    document.getElementById('sCols').textContent = D.cols.length;
+    document.getElementById('sNum').textContent = D.numCols.length;
+    document.getElementById('sMiss').textContent = miss.toLocaleString();
+    document.getElementById('sQual').textContent = qual + '%';
+}
+
+/* ============================
+   BUILD FILTERS
+============================ */
+function buildFilters() {
+    const good = D.catCols.filter(c => c !== D.dateCol);
+    const f1Col = good.find(c => { const u = new Set(D.raw.map(r => r[c])); return u.size >= 2 && u.size <= 40; });
+    const f1 = document.getElementById('filter1');
+    const f1L = document.querySelector('[for="filter1"]') || document.querySelectorAll('.fbar-lbl')[0];
+    if (f1Col) {
+        const uniq = [...new Set(D.raw.map(r => r[f1Col]))].filter(Boolean).sort();
+        f1.innerHTML = `<option value="">All ${f1Col}</option>` + uniq.map(v => `<option value="${v}">${v}</option>`).join('');
+        f1.dataset.col = f1Col;
+        f1.style.display = ''; f1L && (f1L.textContent = f1Col + ':');
+    } else { f1.style.display = 'none'; }
+
+    const f2Col = good.filter(c => c !== f1Col).find(c => { const u = new Set(D.raw.map(r => r[c])); return u.size >= 2 && u.size <= 25; });
+    const f2 = document.getElementById('filter2');
+    const f2L = document.getElementById('filter2Lbl');
+    if (f2Col) {
+        const uniq = [...new Set(D.raw.map(r => r[f2Col]))].filter(Boolean).sort();
+        f2.innerHTML = `<option value="">All ${f2Col}</option>` + uniq.map(v => `<option value="${v}">${v}</option>`).join('');
+        f2.dataset.col = f2Col;
+        f2.style.display = ''; f2L.textContent = f2Col + ':'; f2L.style.display = '';
+    } else { f2.style.display = 'none'; f2L.style.display = 'none'; }
+}
+
+function applyFilters() {
+    let data = [...D.raw];
+    const f1 = document.getElementById('filter1');
+    if (f1.value && f1.dataset.col) data = data.filter(r => String(r[f1.dataset.col]) === f1.value);
+    const f2 = document.getElementById('filter2');
+    if (f2.value && f2.dataset.col) data = data.filter(r => String(r[f2.dataset.col]) === f2.value);
+    D.filtered = data;
+    D.pg = 1;
+    if (!data.length) { toast('No records match filters', 'wrn'); return; }
+    renderAll();
+    toast(`Filtered: ${data.length} of ${D.raw.length} rows`, 'inf');
+}
+
+/* ============================
+   ★ RENDER ALL
+============================ */
+function renderAll() {
+    const data = D.filtered;
+    if (!data.length) return;
+    renderKPIs(data);
+    renderCharts(data);
+    renderInsights(data);
+    renderTable(data);
+    renderStats(data);
+    renderCorrelation(data);
+}
+
+/* ============================
+   FORMAT VALUE
+============================ */
+function fv(v, col = '') {
+    if (v === null || v === undefined || isNaN(v)) return '—';
+    const money = /price|revenue|sales|amount|cost|profit|income|spend|budget|value|pay|fee|total/i.test(col);
+    const pre = money ? '$' : '';
+    if (Math.abs(v) >= 1e9) return pre + (v / 1e9).toFixed(2) + 'B';
+    if (Math.abs(v) >= 1e6) return pre + (v / 1e6).toFixed(2) + 'M';
+    if (Math.abs(v) >= 1e3) return pre + (v / 1000).toFixed(1) + 'K';
+    if (Number.isInteger(v)) return pre + v.toLocaleString();
+    return pre + v.toFixed(2);
+}
+
+/* ============================
+   ★ KPI ENGINE
+============================ */
+function renderKPIs(data) {
+    // Kill old sparklines
+    Object.keys(D.sparks).forEach(k => { try { D.sparks[k].destroy(); } catch(e){} });
+    D.sparks = {};
+
+    const grid = document.getElementById('kpiGrid');
+    grid.innerHTML = '';
+    const nc = D.numCols.slice(0, 5);
+    if (!nc.length) { grid.innerHTML = '<div class="empty glass" style="grid-column:1/-1;"><i class="fas fa-info-circle"></i><h3>No numeric columns found</h3><p>KPIs need at least one numeric column</p></div>'; return; }
+
+    const icons = ['fa-dollar-sign','fa-users','fa-chart-line','fa-shopping-cart','fa-star','fa-percent','fa-boxes','fa-clock'];
+    const kiCls = ['ki-1','ki-2','ki-3','ki-4','ki-5'];
+
+    nc.forEach((col, i) => {
+        const vals = data.map(r => parseFloat(r[col]) || 0);
+        const total = vals.reduce((s, v) => s + v, 0);
+        const avg = total / vals.length;
+        const max = Math.max(...vals);
+        const min = Math.min(...vals);
+        const mid = Math.floor(vals.length / 2);
+        const avgFirst = vals.slice(0, mid).reduce((s, v) => s + v, 0) / mid || 0;
+        const avgSecond = vals.slice(mid).reduce((s, v) => s + v, 0) / (vals.length - mid) || 0;
+        const chg = avgFirst === 0 ? 0 : ((avgSecond - avgFirst) / Math.abs(avgFirst) * 100);
+        const up = chg >= 0;
+
+        const isMoney = /price|revenue|sales|amount|cost|profit|income|spend|budget|value|pay|fee|total/i.test(col);
+        const isCount = /count|users|visits|sessions|orders|views|clicks|transactions|qty|quantity/i.test(col);
+        const displayVal = isCount ? Math.round(total) : isMoney ? total : avg;
+        const sparkData = vals.slice(-Math.min(25, vals.length));
+
+        const card = document.createElement('div');
+        card.className = 'kpi glass';
+        card.innerHTML = `
+            <div class="kpi-top">
+                <div class="kpi-ic ${kiCls[i % 5]}"><i class="fas ${icons[i % icons.length]}"></i></div>
+                <span class="kpi-badge ${up ? 'b-up' : 'b-dn'}"><i class="fas fa-arrow-${up ? 'up' : 'down'}"></i> ${Math.abs(chg).toFixed(1)}%</span>
+            </div>
+            <div class="kpi-val">${fv(displayVal, col)}</div>
+            <div class="kpi-name">${col}</div>
+            <div class="kpi-sub">${isMoney || isCount ? 'Total' : 'Average'} · ${fv(min, col)} – ${fv(max, col)}</div>
+            <div class="spark"><canvas id="sp_${i}"></canvas></div>`;
+        grid.appendChild(card);
+
+        setTimeout(() => mkSpark(`sp_${i}`, sparkData, up ? '#10b981' : '#ef4444'), 50);
+    });
+}
+
+function mkSpark(id, data, color) {
+    if (D.sparks[id]) { try { D.sparks[id].destroy(); } catch(e){} }
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+    D.sparks[id] = new Chart(ctx, {
+        type: 'line',
+        data: { labels: data.map((_, i) => i), datasets: [{ data, borderColor: color, borderWidth: 2, fill: true, backgroundColor: color + '20', tension: 0.4, pointRadius: 0 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } }, animation: { duration: 500 } }
+    });
+}
+
+/* ============================
+   ★ CHARTS ENGINE
+============================ */
+const cOpts = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+        legend: { labels: { color: '#94a3b8', font: { family: 'Inter', size: 11 }, padding: 12, usePointStyle: true } },
+        tooltip: { backgroundColor: 'rgba(10,8,24,0.95)', titleColor: '#f1f5f9', bodyColor: '#94a3b8', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1, padding: 10, cornerRadius: 7, titleFont: { family: 'Inter', weight: '600' }, bodyFont: { family: 'Inter' } }
+    },
+    scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', font: { family: 'Inter', size: 10 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', font: { family: 'Inter', size: 10 } } }
+    },
+    animation: { duration: 600 }
+};
+
+function killC(id) { if (D.charts[id]) { try { D.charts[id].destroy(); } catch(e){} delete D.charts[id]; } }
+
+function renderCharts(data) {
+    // Kill all existing charts
+    Object.keys(D.charts).forEach(killC);
+    const grid = document.getElementById('vizGrid');
+    grid.innerHTML = '';
+
+    if (!D.numCols.length) { grid.innerHTML = '<div class="empty glass viz wide"><i class="fas fa-exclamation-circle"></i><h3>Need numeric columns</h3></div>'; return; }
+
+    const cats = D.catCols.filter(c => c !== D.dateCol);
+
+    // Chart 1: Trend Line
+    grid.appendChild(mkVizCard('c1', `${D.numCols[0]} Trend`, 'fa-chart-area',
+        `<button class="viz-btn on" onclick="swType('c1','line',this)">Line</button><button class="viz-btn" onclick="swType('c1','bar',this)">Bar</button>`));
+    mkTrendChart(data, 'c1');
+
+    // Chart 2: Category Donut
+    if (cats.length) {
+        grid.appendChild(mkVizCard('c2', `${cats[0]} Breakdown`, 'fa-chart-pie',
+            `<button class="viz-btn on" onclick="swType('c2','doughnut',this)">Donut</button><button class="viz-btn" onclick="swType('c2','pie',this)">Pie</button><button class="viz-btn" onclick="swType('c2','polarArea',this)">Polar</button>`));
+        mkCatChart(data, 'c2', cats[0], D.numCols[0]);
+    }
+
+    // Chart 3: Radar
+    if (D.numCols.length >= 3) {
+        grid.appendChild(mkVizCard('c3', 'Performance Radar', 'fa-spider'));
+        mkRadar(data, 'c3');
+    }
+
+    // Chart 4: Horizontal Bar
+    if (cats.length && D.numCols.length >= 2) {
+        const catCol = cats.length > 1 ? cats[1] : cats[0];
+        grid.appendChild(mkVizCard('c4', `${catCol} Comparison`, 'fa-globe'));
+        mkHBar(data, 'c4', catCol, D.numCols.slice(0, 2));
+    }
+
+    // Chart 5: Multi-line (wide)
+    if (D.numCols.length >= 2) {
+        const btnHtml = D.numCols.slice(0, 4).map(c => `<button class="viz-btn" onclick="togLine('${c}',this)">${c.substring(0,10)}</button>`).join('') + `<button class="viz-btn on" onclick="togLine('all',this)">All</button>`;
+        grid.appendChild(mkVizCard('c5', 'Multi-Metric Timeline', 'fa-stream', btnHtml, true));
+        mkMultiLine(data, 'c5');
+    }
+}
+
+function mkVizCard(id, title, icon, ctrls = '', wide = false) {
+    const el = document.createElement('div');
+    el.className = `viz glass${wide ? ' wide' : ''}`;
+    el.innerHTML = `<div class="viz-hd"><div class="viz-tt"><i class="fas ${icon}"></i> ${title}</div><div class="viz-ctrls">${ctrls}</div></div><div class="chart-box${wide ? ' tall' : ''}"><canvas id="${id}"></canvas></div>`;
+    return el;
+}
+
+function mkTrendChart(data, id) {
+    const col = D.numCols[0]; let labels, vals;
+    if (D.dateCol) {
+        const map = {};
+        data.forEach(r => { const k = String(r[D.dateCol] || '').split('T')[0]; if (!map[k]) map[k] = { s: 0, n: 0 }; map[k].s += parseFloat(r[col]) || 0; map[k].n++; });
+        const keys = Object.keys(map).sort();
+        labels = keys.map(k => k.length > 7 ? k.substring(5) : k);
+        vals = keys.map(k => map[k].s);
+    } else { labels = data.map((_, i) => i + 1); vals = data.map(r => parseFloat(r[col]) || 0); }
+    const ctx = document.getElementById(id); if (!ctx) return;
+    const grad = ctx.getContext('2d').createLinearGradient(0, 0, 0, 255);
+    grad.addColorStop(0, 'rgba(99,102,241,0.3)'); grad.addColorStop(1, 'rgba(99,102,241,0.01)');
+    D.charts[id] = new Chart(ctx, {
+        type: 'line', data: { labels, datasets: [{ label: col, data: vals, borderColor: '#6366f1', backgroundColor: grad, borderWidth: 2.5, fill: true, tension: 0.35, pointRadius: 0, pointHoverRadius: 5 }] },
+        options: { ...JSON.parse(JSON.stringify(cOpts)), interaction: { mode: 'index', intersect: false } }
+    });
+}
+
+function mkCatChart(data, id, catCol, numCol) {
+    const map = {};
+    data.forEach(r => { const k = String(r[catCol] || 'Other'); map[k] = (map[k] || 0) + (parseFloat(r[numCol]) || 0); });
+    const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const ctx = document.getElementById(id); if (!ctx) return;
+    D.charts[id] = new Chart(ctx, {
+        type: 'doughnut', data: { labels: sorted.map(e => e[0]), datasets: [{ data: sorted.map(e => e[1]), backgroundColor: COLORS.slice(0, sorted.length), borderColor: 'rgba(10,8,24,0.7)', borderWidth: 2, hoverOffset: 10 }] },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { ...JSON.parse(JSON.stringify(cOpts.plugins)), legend: { position: 'right', labels: { color: '#94a3b8', font: { family: 'Inter', size: 10 }, padding: 8, usePointStyle: true } } }, animation: { duration: 600, animateRotate: true } }
+    });
+}
+
+function mkRadar(data, id) {
+    const cols = D.numCols.slice(0, 6);
+    const maxes = cols.map(c => Math.max(...data.map(r => parseFloat(r[c]) || 0)));
+    const mid = Math.floor(data.length / 2);
+    const norm = (rows, c, i) => { const avg = rows.reduce((s, r) => s + (parseFloat(r[c]) || 0), 0) / rows.length; return maxes[i] > 0 ? avg / maxes[i] * 100 : 0; };
+    const ctx = document.getElementById(id); if (!ctx) return;
+    D.charts[id] = new Chart(ctx, {
+        type: 'radar', data: { labels: cols, datasets: [
+            { label: 'Recent', data: cols.map((c, i) => norm(data.slice(mid), c, i)), backgroundColor: 'rgba(99,102,241,0.18)', borderColor: '#6366f1', borderWidth: 2, pointBackgroundColor: '#6366f1', pointRadius: 3 },
+            { label: 'Previous', data: cols.map((c, i) => norm(data.slice(0, mid), c, i)), backgroundColor: 'rgba(6,182,212,0.14)', borderColor: '#06b6d4', borderWidth: 2, pointBackgroundColor: '#06b6d4', pointRadius: 3, borderDash: [4, 4] }
+        ] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { ...JSON.parse(JSON.stringify(cOpts.plugins)) }, scales: { r: { grid: { color: 'rgba(255,255,255,0.06)' }, angleLines: { color: 'rgba(255,255,255,0.06)' }, pointLabels: { color: '#94a3b8', font: { family: 'Inter', size: 10 } }, ticks: { display: false }, suggestedMin: 0, suggestedMax: 100 } }, animation: { duration: 600 } }
+    });
+}
+
+function mkHBar(data, id, catCol, numCols) {
+    const map = {};
+    data.forEach(r => { const k = String(r[catCol] || 'Other'); if (!map[k]) map[k] = numCols.map(() => 0); numCols.forEach((c, i) => { map[k][i] += parseFloat(r[c]) || 0; }); });
+    const sorted = Object.entries(map).sort((a, b) => b[1][0] - a[1][0]).slice(0, 10);
+    const ctx = document.getElementById(id); if (!ctx) return;
+    D.charts[id] = new Chart(ctx, {
+        type: 'bar', data: { labels: sorted.map(e => e[0]), datasets: numCols.map((c, i) => ({ label: c, data: sorted.map(e => e[1][i]), backgroundColor: COLORS[i], borderColor: BORDERS[i], borderWidth: 1, borderRadius: 4 })) },
+        options: { ...JSON.parse(JSON.stringify(cOpts)), indexAxis: 'y' }
+    });
+}
+
+function mkMultiLine(data, id) {
+    const cols = D.numCols.slice(0, 4); let labels; const dm = {};
+    if (D.dateCol) {
+        const keys = [...new Set(data.map(r => String(r[D.dateCol] || '').split('T')[0]))].sort();
+        labels = keys.map(k => k.length > 7 ? k.substring(5) : k);
+        cols.forEach(c => { dm[c] = keys.map(k => { const rs = data.filter(r => String(r[D.dateCol] || '').split('T')[0] === k); return rs.reduce((s, r) => s + (parseFloat(r[c]) || 0), 0); }); });
+    } else { labels = data.map((_, i) => i + 1); cols.forEach(c => { dm[c] = data.map(r => parseFloat(r[c]) || 0); }); }
+    const ctx = document.getElementById(id); if (!ctx) return;
+    D.charts[id] = new Chart(ctx, {
+        type: 'line', data: { labels, datasets: cols.map((c, i) => ({ label: c, data: dm[c], borderColor: BORDERS[i], backgroundColor: 'transparent', borderWidth: 2, tension: 0.3, pointRadius: 1, pointHoverRadius: 4 })) },
+        options: { ...JSON.parse(JSON.stringify(cOpts)), interaction: { mode: 'index', intersect: false } }
+    });
+}
+
+function swType(id, type, btn) {
+    const ch = D.charts[id]; if (!ch) return;
+    btn.parentElement.querySelectorAll('.viz-btn').forEach(b => b.classList.remove('on')); btn.classList.add('on');
+    ch.config.type = type;
+    if (['doughnut','pie','polarArea'].includes(type)) ch.options.scales = {}; else ch.options.scales = JSON.parse(JSON.stringify(cOpts.scales));
+    ch.update();
+}
+
+function togLine(col, btn) {
+    const ch = D.charts['c5']; if (!ch) return;
+    btn.parentElement.querySelectorAll('.viz-btn').forEach(b => b.classList.remove('on')); btn.classList.add('on');
+    ch.data.datasets.forEach(ds => { ds.hidden = col !== 'all' && ds.label !== col; }); ch.update();
+}
+
+/* ============================
+   ★ INSIGHTS ENGINE — 100% DATA-DRIVEN
+============================ */
+function renderInsights(data) {
+    const grid = document.getElementById('insGrid');
+    grid.innerHTML = '';
+    const ins = genInsights(data);
+    if (!ins.length) { grid.innerHTML = '<div class="empty glass" style="grid-column:1/-1;"><i class="fas fa-info-circle"></i><h3>Not enough data for insights</h3></div>'; return; }
+    ins.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'ins glass';
+        el.innerHTML = `<div class="ins-hd"><div class="ins-ic ${item.ic}"><i class="fas ${item.icon}"></i></div><div><div class="ins-title">${item.title}</div><div class="ins-type">${item.type}</div></div></div><div class="ins-body">${item.body}</div>`;
+        grid.appendChild(el);
+    });
+}
+
+function genInsights(data) {
+    const ins = [];
+    const nc = D.numCols;
+    const cc = D.catCols.filter(c => c !== D.dateCol);
+    if (!nc.length || !data.length) return ins;
+
+    // 1️⃣ TREND
+    const col0 = nc[0];
+    const v0 = data.map(r => parseFloat(r[col0]) || 0);
+    const mid = Math.floor(v0.length / 2);
+    const a1 = v0.slice(0, mid).reduce((s, v) => s + v, 0) / mid || 0;
+    const a2 = v0.slice(mid).reduce((s, v) => s + v, 0) / (v0.length - mid) || 0;
+    const pct = a1 === 0 ? 0 : (a2 - a1) / Math.abs(a1) * 100;
+    ins.push({ icon: 'fa-chart-line', ic: 'ic-trend', type: 'Trend Analysis', title: `${col0}: ${pct >= 0 ? 'Upward' : 'Downward'} Trend Detected`,
+        body: `<strong>${col0}</strong> shows a <strong>${pct >= 0 ? 'positive' : 'negative'}</strong> movement of <span class="m">${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%</span> when comparing first half vs second half of the dataset. Current avg: <span class="m">${fv(a2, col0)}</span>, previous avg: <span class="m">${fv(a1, col0)}</span>.`
+    });
+
+    // 2️⃣ DISTRIBUTION STATS
+    const sorted = [...v0].sort((a, b) => a - b);
+    const n = sorted.length;
+    const mean = v0.reduce((s, v) => s + v, 0) / n;
+    const median = n % 2 === 0 ? (sorted[n / 2 - 1] + sorted[n / 2]) / 2 : sorted[Math.floor(n / 2)];
+    const std = Math.sqrt(v0.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / n);
+    const cv = mean !== 0 ? (std / Math.abs(mean) * 100) : 0;
+    const skew = Math.abs(mean - median) / (std || 1);
+    ins.push({ icon: 'fa-calculator', ic: 'ic-cat', type: 'Statistical Profile', title: `${col0}: Distribution Shape`,
+        body: `Mean: <span class="m">${fv(mean, col0)}</span>, Median: <span class="m">${fv(median, col0)}</span>, Std Dev: <span class="m">${fv(std, col0)}</span>. Coefficient of variation: <span class="m">${cv.toFixed(1)}%</span>. Distribution is ${skew > 0.5 ? '<strong>skewed</strong> — median may be more reliable than mean' : '<strong>fairly symmetric</strong> — mean is representative'}.`
+    });
+
+    // 3️⃣ OUTLIERS (IQR)
+    const q1 = sorted[Math.floor(n * 0.25)];
+    const q3 = sorted[Math.floor(n * 0.75)];
+    const iqr = q3 - q1;
+    const lo = q1 - 1.5 * iqr, hi = q3 + 1.5 * iqr;
+    const outliers = v0.filter(v => v < lo || v > hi);
+    ins.push({ icon: outliers.length ? 'fa-exclamation-triangle' : 'fa-check-circle', ic: outliers.length ? 'ic-alert' : 'ic-corr', type: 'Anomaly Detection',
+        title: `${col0}: ${outliers.length ? outliers.length + ' Outlier' + (outliers.length > 1 ? 's' : '') : 'No Outliers'}`,
+        body: outliers.length
+            ? `Found <span class="m">${outliers.length}</span> outlier${outliers.length > 1 ? 's' : ''} in <strong>${col0}</strong> (IQR method). Boundary: <span class="m">${fv(lo, col0)}</span> – <span class="m">${fv(hi, col0)}</span>. Most extreme: <span class="m">${fv(Math.max(...outliers.map(Math.abs)), col0)}</span>. Consider investigating these records.`
+            : `No outliers detected in <strong>${col0}</strong>. All values fall within expected range: <span class="m">${fv(lo, col0)}</span> – <span class="m">${fv(hi, col0)}</span>. Data quality is good.`
+    });
+
+    // 4️⃣ CORRELATION (if 2+ numeric cols)
+    if (nc.length >= 2) {
+        let bestR = 0, bestPair = [nc[0], nc[1]];
+        for (let i = 0; i < Math.min(nc.length, 5); i++) {
+            for (let j = i + 1; j < Math.min(nc.length, 5); j++) {
+                const r = pearson(data.map(row => parseFloat(row[nc[i]]) || 0), data.map(row => parseFloat(row[nc[j]]) || 0));
+                if (Math.abs(r) > Math.abs(bestR)) { bestR = r; bestPair = [nc[i], nc[j]]; }
+            }
+        }
+        const str = Math.abs(bestR) > 0.7 ? 'strong' : Math.abs(bestR) > 0.4 ? 'moderate' : 'weak';
+        const dir = bestR > 0 ? 'positive' : 'negative';
+        ins.push({ icon: 'fa-link', ic: 'ic-corr', type: 'Correlation Analysis',
+            title: `Strongest: ${bestPair[0]} ↔ ${bestPair[1]}`,
+            body: `The strongest correlation found is between <strong>${bestPair[0]}</strong> and <strong>${bestPair[1]}</strong>: <span class="m">r = ${bestR.toFixed(3)}</span> (${str} ${dir}). ${Math.abs(bestR) > 0.5 ? 'This suggests a meaningful relationship worth investigating.' : 'This is a relatively weak association.'}`
+        });
+    }
+
+    // 5️⃣ TOP CATEGORY
+    if (cc.length && nc.length) {
+        const catCol = cc[0], numCol = nc[0];
+        const map = {};
+        data.forEach(r => { const k = String(r[catCol] || '?'); map[k] = (map[k] || 0) + (parseFloat(r[numCol]) || 0); });
+        const sorted2 = Object.entries(map).sort((a, b) => b[1] - a[1]);
+        const total = sorted2.reduce((s, e) => s + e[1], 0);
+        if (sorted2.length >= 2) {
+            const topShare = total > 0 ? (sorted2[0][1] / total * 100).toFixed(1) : 0;
+            const botName = sorted2[sorted2.length - 1][0];
+            const botShare = total > 0 ? (sorted2[sorted2.length - 1][1] / total * 100).toFixed(1) : 0;
+            ins.push({ icon: 'fa-trophy', ic: 'ic-info', type: 'Category Analysis',
+                title: `Top ${catCol}: ${sorted2[0][0]}`,
+                body: `<strong>${sorted2[0][0]}</strong> leads with <span class="m">${fv(sorted2[0][1], numCol)}</span> in <strong>${numCol}</strong> (<span class="m">${topShare}%</span> of total). ${sorted2.length > 1 ? `Runner-up: <strong>${sorted2[1][0]}</strong> at <span class="m">${fv(sorted2[1][1], numCol)}</span>. Lowest: <strong>${botName}</strong> at <span class="m">${botShare}%</span>.` : ''}`
+            });
+        }
+    }
+
+    // 6️⃣ LINEAR REGRESSION FORECAST
+    if (nc.length) {
+        const col = nc[0];
+        const vals = data.map(r => parseFloat(r[col]) || 0);
+        const xs = vals.map((_, i) => i);
+        const xm = xs.reduce((s, v) => s + v, 0) / xs.length;
+        const ym = vals.reduce((s, v) => s + v, 0) / vals.length;
+        const num = xs.reduce((s, v, i) => s + (v - xm) * (vals[i] - ym), 0);
+        const den = xs.reduce((s, v) => s + Math.pow(v - xm, 2), 0);
+        const slope = den === 0 ? 0 : num / den;
+        const next10 = slope * (vals.length + 10) + (ym - slope * xm);
+        const growPct = ym > 0 ? (next10 - ym) / Math.abs(ym) * 100 : 0;
+        ins.push({ icon: 'fa-chart-line', ic: 'ic-fore', type: 'Trend Forecast',
+            title: `${col}: Projected Direction`,
+            body: `Linear regression across <span class="m">${data.length}</span> records shows a slope of <span class="m">${slope >= 0 ? '+' : ''}${fv(slope, col)}/unit</span>. 10-period projection: <span class="m">${fv(next10, col)}</span> (${growPct >= 0 ? '+' : ''}${growPct.toFixed(1)}% vs current avg). ${Math.abs(slope) < ym * 0.001 ? 'Trend is essentially <strong>flat</strong>.' : slope > 0 ? 'Showing <strong>growth trajectory</strong>.' : 'Showing <strong>declining trajectory</strong>.'}`
+        });
+    }
+
+    // 7️⃣ DATA QUALITY
+    const totalCells = data.length * D.cols.length;
+    let miss = 0;
+    data.forEach(r => D.cols.forEach(c => { if (r[c] === null || r[c] === undefined || r[c] === '') miss++; }));
+    const quality = Math.round((1 - miss / totalCells) * 100);
+    ins.push({ icon: quality >= 90 ? 'fa-shield-alt' : 'fa-exclamation-circle', ic: quality >= 90 ? 'ic-corr' : 'ic-alert', type: 'Data Quality Report',
+        title: `Quality Score: ${quality}%`,
+        body: `Your dataset has <span class="m">${data.length}</span> rows × <span class="m">${D.cols.length}</span> columns = <span class="m">${totalCells.toLocaleString()}</span> cells. Missing values: <span class="m">${miss.toLocaleString()}</span>. ${quality >= 95 ? 'Excellent data quality — analysis results are highly reliable.' : quality >= 80 ? 'Good quality, but some missing values may affect certain metrics.' : 'Significant missing data detected — consider cleaning your dataset before deep analysis.'}`
+    });
+
+    return ins;
+}
+
+function pearson(x, y) {
+    const n = x.length; if (!n) return 0;
+    const mx = x.reduce((s, v) => s + v, 0) / n;
+    const my = y.reduce((s, v) => s + v, 0) / n;
+    let num = 0, dx = 0, dy = 0;
+    for (let i = 0; i < n; i++) { const a = x[i] - mx, b = y[i] - my; num += a * b; dx += a * a; dy += b * b; }
+    const d = Math.sqrt(dx * dy);
+    return d === 0 ? 0 : num / d;
+}
+
+/* ============================
+   ★ DATA TABLE
+============================ */
+function renderTable(data) {
+    const hd = document.getElementById('tHead');
+    hd.innerHTML = D.cols.map((c, i) => `<th onclick="tSort(${i})">${c} <i class="fas fa-sort sort-ic"></i></th>`).join('');
+    renderPage(data);
+}
+
+function renderPage(data) {
+    const bd = document.getElementById('tBody');
+    const start = (D.pg - 1) * D.perPg;
+    const slice = data.slice(start, start + D.perPg);
+    bd.innerHTML = slice.map(r => `<tr>${D.cols.map(c => {
+        const v = r[c]; if (typeof v === 'number') return `<td>${Number.isInteger(v) ? v.toLocaleString() : v.toFixed(3)}</td>`;
+        return `<td>${v ?? '—'}</td>`;
+    }).join('')}</tr>`).join('');
+
+    const totalPg = Math.ceil(data.length / D.perPg);
+    document.getElementById('tInfo').textContent = `${start + 1}–${Math.min(start + D.perPg, data.length)} of ${data.length}`;
+    const pb = document.getElementById('pgBtns');
+    let h = `<button class="pg" onclick="goP(${D.pg - 1})" ${D.pg <= 1 ? 'disabled' : ''}>‹</button>`;
+    const sp = Math.max(1, D.pg - 2), ep = Math.min(totalPg, sp + 4);
+    for (let i = sp; i <= ep; i++) h += `<button class="pg ${i === D.pg ? 'on' : ''}" onclick="goP(${i})">${i}</button>`;
+    h += `<button class="pg" onclick="goP(${D.pg + 1})" ${D.pg >= totalPg ? 'disabled' : ''}>›</button>`;
+    pb.innerHTML = h;
+}
+
+function goP(p) { const tp = Math.ceil(D.filtered.length / D.perPg); if (p < 1 || p > tp) return; D.pg = p; renderPage(D.filtered); }
+
+function tSort(i) {
+    const col = D.cols[i];
+    D.sortDir = D.sortCol === i && D.sortDir === 'asc' ? 'desc' : 'asc';
+    D.sortCol = i;
+    D.filtered.sort((a, b) => {
+        let va = a[col], vb = b[col];
+        if (typeof va === 'number' && typeof vb === 'number') return D.sortDir === 'asc' ? va - vb : vb - va;
+        va = String(va || ''); vb = String(vb || '');
+        return D.sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+    });
+    D.pg = 1; renderPage(D.filtered);
+}
+
+/* ============================
+   ★ STATISTICS TAB
+============================ */
+function renderStats(data) {
+    const sel = document.getElementById('distColSel');
+    sel.innerHTML = D.numCols.map(c => `<option value="${c}">${c}</option>`).join('');
+    updateStats();
+}
+
+function updateStats() {
+    const col = document.getElementById('distColSel').value || D.numCols[0];
+    const data = D.filtered;
+    if (!col || !data.length) return;
+
+    const vals = data.map(r => parseFloat(r[col]) || 0).sort((a, b) => a - b);
+    const n = vals.length;
+    const mean = vals.reduce((s, v) => s + v, 0) / n;
+    const med = n % 2 === 0 ? (vals[n / 2 - 1] + vals[n / 2]) / 2 : vals[Math.floor(n / 2)];
+    const std = Math.sqrt(vals.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / n);
+    const q1 = vals[Math.floor(n * 0.25)], q3 = vals[Math.floor(n * 0.75)];
+    const total = vals.reduce((s, v) => s + v, 0);
+
+    document.getElementById('statBoxes').innerHTML = [
+        { l: 'Sum', v: fv(total, col) }, { l: 'Mean', v: fv(mean, col) }, { l: 'Median', v: fv(med, col) },
+        { l: 'Std Dev', v: fv(std, col) }, { l: 'Min', v: fv(vals[0], col) }, { l: 'Max', v: fv(vals[n - 1], col) },
+        { l: 'Q1', v: fv(q1, col) }, { l: 'Q3', v: fv(q3, col) }, { l: 'Count', v: n.toLocaleString() }
+    ].map(s => `<div class="stat-box"><div class="stat-v">${s.v}</div><div class="stat-l">${s.l}</div></div>`).join('');
+
+    // Distribution
+    killC('distChart');
+    const bins = Math.min(25, Math.max(5, Math.ceil(Math.sqrt(n))));
+    const min = vals[0], max = vals[n - 1], bSize = (max - min) / bins || 1;
+    const counts = Array(bins).fill(0);
+    vals.forEach(v => { const idx = Math.min(Math.floor((v - min) / bSize), bins - 1); counts[idx]++; });
+    const ctx = document.getElementById('distChart');
+    if (ctx) D.charts['distChart'] = new Chart(ctx, {
+        type: 'bar', data: { labels: counts.map((_, i) => fv(min + i * bSize, col)), datasets: [{ label: 'Frequency', data: counts, backgroundColor: 'rgba(99,102,241,0.5)', borderColor: '#6366f1', borderWidth: 1, borderRadius: 3 }] },
+        options: { ...JSON.parse(JSON.stringify(cOpts)), scales: { x: { ...cOpts.scales.x, ticks: { ...cOpts.scales.x.ticks, maxTicksLimit: 8 } }, y: { ...cOpts.scales.y, beginAtZero: true } }, plugins: { ...JSON.parse(JSON.stringify(cOpts.plugins)), legend: { display: false } } }
+    });
+
+    // Comparison
+    killC('compChart');
+    const compCols = D.numCols.slice(0, 10);
+    const avgs = compCols.map(c => { const v = data.map(r => parseFloat(r[c]) || 0); return v.reduce((s, x) => s + x, 0) / v.length; });
+    const ctx2 = document.getElementById('compChart');
+    if (ctx2) D.charts['compChart'] = new Chart(ctx2, {
+        type: 'bar', data: { labels: compCols, datasets: [{ label: 'Average', data: avgs, backgroundColor: COLORS.slice(0, compCols.length), borderColor: BORDERS.slice(0, compCols.length), borderWidth: 1, borderRadius: 4 }] },
+        options: { ...JSON.parse(JSON.stringify(cOpts)), plugins: { ...JSON.parse(JSON.stringify(cOpts.plugins)), legend: { display: false } } }
+    });
+}
+
+/* ============================
+   ★ CORRELATION
+============================ */
+function renderCorrelation(data) {
+    const cols = D.numCols.slice(0, 7);
+    if (cols.length < 2) { document.getElementById('corrBox').innerHTML = '<div class="empty" style="padding:20px;"><i class="fas fa-info-circle"></i><h3>Need ≥ 2 numeric columns</h3></div>'; return; }
+
+    const matrix = cols.map(c1 => cols.map(c2 => pearson(data.map(r => parseFloat(r[c1]) || 0), data.map(r => parseFloat(r[c2]) || 0))));
+    const nc = cols.length;
+    let h = `<div class="corr-container" style="grid-template-columns:70px repeat(${nc},1fr);">`;
+    h += '<div class="corr-lbl"></div>';
+    cols.forEach(c => h += `<div class="corr-lbl" title="${c}">${c.substring(0, 6)}</div>`);
+    cols.forEach((c1, i) => {
+        h += `<div class="corr-lbl" title="${c1}">${c1.substring(0, 6)}</div>`;
+        cols.forEach((_, j) => {
+            const v = matrix[i][j];
+            const hue = v > 0 ? 220 : 0;
+            const sat = Math.abs(v) * 85;
+            const lit = 50 - Math.abs(v) * 20;
+            const bg = `hsla(${hue},${sat}%,${lit}%,${Math.abs(v) * 0.85 + 0.08})`;
+            const tc = Math.abs(v) > 0.45 ? '#fff' : '#94a3b8';
+            h += `<div class="corr-cell" style="background:${bg};color:${tc};" title="${c1} × ${cols[j]}: ${v.toFixed(3)}">${v.toFixed(2)}</div>`;
+        });
+    });
+    h += '</div>';
+    document.getElementById('corrBox').innerHTML = h;
+
+    // Scatter
+    killC('scatChart');
+    const x = data.map(r => parseFloat(r[cols[0]]) || 0);
+    const y = data.map(r => parseFloat(r[cols[1]]) || 0);
+    const ctx = document.getElementById('scatChart');
+    if (ctx) D.charts['scatChart'] = new Chart(ctx, {
+        type: 'scatter', data: { datasets: [{ label: `${cols[0]} vs ${cols[1]}`, data: x.map((v, i) => ({ x: v, y: y[i] })), backgroundColor: 'rgba(99,102,241,0.4)', borderColor: '#6366f1', borderWidth: 1, pointRadius: 3, pointHoverRadius: 6 }] },
+        options: { ...JSON.parse(JSON.stringify(cOpts)), scales: { x: { ...cOpts.scales.x, title: { display: true, text: cols[0], color: '#64748b', font: { family: 'Inter' } } }, y: { ...cOpts.scales.y, title: { display: true, text: cols[1], color: '#64748b', font: { family: 'Inter' } } } } }
+    });
+}
+
+/* ============================
+   DEMO DATA
+============================ */
+function loadDemo() {
+    if (D.loaded) doResetAll();
+    const cats = ['Electronics','Clothing','Food & Beverage','Sports','Books','Home & Garden'];
+    const regions = ['North America','Europe','Asia Pacific','Latin America','Middle East'];
+    const channels = ['Online','Retail','Wholesale','Partner'];
+    const rows = [];
+    const start = new Date('2024-01-01');
+    for (let i = 0; i < 200; i++) {
+        const d = new Date(start); d.setDate(d.getDate() + Math.floor(i * 1.82));
+        const season = Math.sin(i / 35 * Math.PI) * 0.3 + 1;
+        const noise = () => 0.7 + Math.random() * 0.6;
+        rows.push({
+            Date: d.toISOString().split('T')[0],
+            Category: cats[Math.floor(Math.random() * cats.length)],
+            Region: regions[Math.floor(Math.random() * regions.length)],
+            Channel: channels[Math.floor(Math.random() * channels.length)],
+            Revenue: Math.round(15000 * season * noise() * 100) / 100,
+            Profit: Math.round(4000 * season * noise() * 100) / 100,
+            Users: Math.floor(1500 * season * noise()),
+            Orders: Math.floor(120 * season * noise()),
+            AvgOrderValue: Math.round(80 * noise() * 100) / 100,
+            ConversionRate: Math.round((3 + Math.random() * 5) * 100) / 100,
+            Satisfaction: Math.round((3.2 + Math.random() * 1.8) * 10) / 10,
+            BounceRate: Math.round((22 + Math.random() * 35) * 100) / 100,
+        });
+    }
+    D.fileCount = 1;
+    addFileChip({ name: 'demo_dataset.csv', size: 24576 }, rows.length);
+    ingest(rows, 'demo_dataset.csv');
+    toast('Demo loaded: 200 rows × 12 columns', 'ok');
+}
+
+/* ============================
+   EXPORT CSV
+============================ */
+function doExportCSV() {
+    if (!D.filtered.length) { toast('No data to export', 'wrn'); return; }
+    const csv = Papa.unparse(D.filtered);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'datavision_export_' + Date.now() + '.csv'; a.click();
+    URL.revokeObjectURL(url);
+    toast('CSV exported!', 'ok');
+}
+
+/* ============================
+   REFRESH
+============================ */
+function doRefresh() {
+    if (D.loaded) { D.filtered = [...D.raw]; D.pg = 1; renderAll(); toast('Dashboard refreshed', 'ok'); }
+    else toast('No data loaded', 'inf');
+}
+</script>
+</body>
+</html>
